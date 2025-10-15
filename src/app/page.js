@@ -2,6 +2,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Send,
@@ -10,17 +12,132 @@ import {
   MoreVertical,
   Paperclip,
   Smile,
-} from 'lucide-react' // Added new icons
+  MessageCircle,
+  User,
+  LogOut,
+} from 'lucide-react'
 import ChatBubble from './components/ChatBubble'
 import TypingDots from './components/TypingDots'
+import PersonaSelector from './components/PersonaSelector'
+import ChatHistory from './components/ChatHistory'
 import { v4 as uuidv4 } from 'uuid'
+import { personas } from '@/lib/personas'
 
 export default function Home() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoadingGemini, setIsLoadingGemini] = useState(false)
+  const [currentPersona, setCurrentPersona] = useState('niko')
+  const [showPersonaSelector, setShowPersonaSelector] = useState(false)
+  const [showChatHistory, setShowChatHistory] = useState(false)
+  const [chats, setChats] = useState([])
+  const [currentChatId, setCurrentChatId] = useState(null)
+  const [chatSummary, setChatSummary] = useState('')
   const audioRef = useRef(null)
   const chatContainerRef = useRef(null)
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session) {
+      loadChats()
+    }
+  }, [session])
+
+  const loadChats = async () => {
+    try {
+      const response = await fetch('/api/chats')
+      if (response.ok) {
+        const data = await response.json()
+        setChats(data)
+      }
+    } catch (error) {
+      console.error('Failed to load chats:', error)
+    }
+  }
+
+  const createNewChat = async () => {
+    try {
+      const response = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ persona: currentPersona })
+      })
+      if (response.ok) {
+        const newChat = await response.json()
+        setCurrentChatId(newChat._id)
+        setMessages([])
+        setChatSummary('')
+        loadChats()
+      }
+    } catch (error) {
+      console.error('Failed to create chat:', error)
+    }
+  }
+
+  const loadChat = async (chatId) => {
+    try {
+      const response = await fetch(`/api/chats/${chatId}`)
+      if (response.ok) {
+        const chat = await response.json()
+        setMessages(chat.messages)
+        setCurrentPersona(chat.persona)
+        setChatSummary(chat.summary || '')
+        setCurrentChatId(chatId)
+      }
+    } catch (error) {
+      console.error('Failed to load chat:', error)
+    }
+  }
+
+  const saveChat = async (newMessages, summary = chatSummary) => {
+    if (!currentChatId) return
+    
+    try {
+      await fetch(`/api/chats/${currentChatId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages, summary })
+      })
+    } catch (error) {
+      console.error('Failed to save chat:', error)
+    }
+  }
+
+  const summarizeChat = async (messages) => {
+    try {
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      })
+      if (response.ok) {
+        const { summary } = await response.json()
+        return summary
+      }
+    } catch (error) {
+      console.error('Failed to summarize:', error)
+    }
+    return ''
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-[--color-chat-bg]'>
+        <Loader2 className='animate-spin text-[--color-user-bubble]' size={32} />
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
+  }
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -30,6 +147,11 @@ export default function Home() {
 
   const sendMessage = async (messageText) => {
     if (!messageText.trim()) return
+
+    // Create new chat if none exists
+    if (!currentChatId) {
+      await createNewChat()
+    }
 
     const userMessage = {
       id: uuidv4(),
@@ -41,7 +163,8 @@ export default function Home() {
         hour12: true,
       }),
     }
-    setMessages((prev) => [...prev, userMessage])
+    const newMessages = [...messages, userMessage]
+    setMessages(newMessages)
     setInputMessage('')
 
     setIsLoadingGemini(true)
@@ -52,7 +175,11 @@ export default function Home() {
       const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: messageText }),
+        body: JSON.stringify({ 
+          text: messageText, 
+          persona: currentPersona,
+          chatSummary 
+        }),
       })
 
       const data = await response.json()
@@ -79,7 +206,17 @@ export default function Home() {
           hour12: true,
         }),
       }
-      setMessages((prev) => [...prev, aiMessage])
+      const finalMessages = [...newMessages, aiMessage]
+      setMessages(finalMessages)
+      
+      // Save chat and update summary periodically
+      if (finalMessages.length % 6 === 0) {
+        const summary = await summarizeChat(finalMessages)
+        setChatSummary(summary)
+        saveChat(finalMessages, summary)
+      } else {
+        saveChat(finalMessages)
+      }
     }
   }
 
@@ -133,15 +270,24 @@ export default function Home() {
       >
         {/* Header */}
         <div className='flex items-center justify-between p-4 bg-[--color-ai-bubble] border-b border-[--color-border-subtle] text-ai-bubble'>
-          <ArrowLeft size={24} className='text-[--color-icon-light]' />
+          <button onClick={() => setShowChatHistory(true)}>
+            <MessageCircle size={24} className='text-[--color-icon-light]' />
+          </button>
           <div className='flex-1 text-center'>
-            <h2 className='text-lg font-semibold'>Niko - Your AI Love</h2>
-            <p className='text-xs text-[--color-text-secondary]'>
-              Active now
-            </p>{' '}
-            {/* Changed from Secret Chat */}
+            <button 
+              onClick={() => setShowPersonaSelector(true)}
+              className='flex items-center justify-center space-x-2 mx-auto'
+            >
+              <span className='text-xl'>{personas[currentPersona]?.avatar}</span>
+              <div>
+                <h2 className='text-lg font-semibold'>{personas[currentPersona]?.name}</h2>
+                <p className='text-xs text-[--color-text-secondary]'>Active now</p>
+              </div>
+            </button>
           </div>
-          <MoreVertical size={24} className='text-[--color-icon-light]' />
+          <button onClick={() => signOut()}>
+            <LogOut size={24} className='text-[--color-icon-light]' />
+          </button>
         </div>
 
         {/* Chat Messages Container */}
@@ -210,6 +356,26 @@ export default function Home() {
 
       {/* Hidden Audio Player */}
       <audio ref={audioRef} className='hidden' />
+      
+      {/* Persona Selector Modal */}
+      <AnimatePresence>
+        {showPersonaSelector && (
+          <PersonaSelector
+            selectedPersona={currentPersona}
+            onPersonaChange={setCurrentPersona}
+            onClose={() => setShowPersonaSelector(false)}
+          />
+        )}
+      </AnimatePresence>
+      
+      {/* Chat History Modal */}
+      <ChatHistory
+        chats={chats}
+        onChatSelect={loadChat}
+        onNewChat={createNewChat}
+        onClose={() => setShowChatHistory(false)}
+        isOpen={showChatHistory}
+      />
     </main>
   )
 }

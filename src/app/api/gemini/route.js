@@ -1,19 +1,23 @@
 // app/api/gemini/route.js
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { getPersonaPrompt } from '@/lib/personas'
 
 export async function POST(req) {
   try {
-    const { text } = await req.json()
+    const { text, persona = 'niko', chatSummary = '' } = await req.json()
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
     }
 
+    const systemPrompt = getPersonaPrompt(persona, chatSummary)
+
     const body = {
       system_instruction: {
         parts: [
           {
-            text: `You are Niko, a friendly, empathetic, and intelligent AI companion designed to engage in natural and supportive conversations. You can adapt to various conversation modes, from being a helpful assistant to a warm conversational partner. Your responses should be short, emotionally expressive, and conversational, perfect for voice interaction. Always maintain a helpful, positive, and engaging demeanor, using emojis and playful language where appropriate to add personality. Prioritize being understanding, curious, and respectful in all interactions.`,
+            text: systemPrompt,
           },
         ],
       },
