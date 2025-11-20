@@ -47,31 +47,32 @@ body::before {
 }
 
 /* @theme block: All your custom Tailwind v4 configurations live here */
-@theme {
-  /* New Color Palette (inspired by screenshot) */
-  --color-chat-bg: #1a1a1a; /* Main dark background */
-  --color-chat-bg-dark: #121212; /* Even darker for some elements */
-  --color-chat-bg-pattern: #333333; /* For the subtle dot pattern */
+:root {
+  /* Deep Dark Mode Palette */
+  --color-chat-bg: #0a0a0a;
+  --color-chat-bg-dark: #000000;
+  --color-chat-bg-pattern: #222222;
 
-  --color-user-bubble: #ff9800; /* Vibrant orange for user messages */
-  --color-ai-bubble: #2a2a2a; /* Dark grey for AI messages */
+  --color-user-bubble: #ff9800;
+  --color-ai-bubble: #1e1e1e;
 
-  --color-text-primary: #ffffff; /* White for main text */
-  --color-text-secondary: #b0b0b0; /* Lighter grey for secondary text (timestamps, etc.) */
-  --color-text-placeholder: #666666; /* For input placeholders */
-  --color-icon-light: #b0b0b0; /* For icons that are light grey */
-  --color-icon-dark: #666666; /* For darker, subtle icons */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a0a0;
+  --color-text-placeholder: #555555;
+  --color-icon-light: #a0a0a0;
+  --color-icon-dark: #555555;
 
-  --color-border-subtle: #3a3a3a; /* Subtle borders */
+  --color-border-subtle: #2a2a2a;
 
-  /* Aliases for convenience in components if preferred, but direct use is fine */
+  /* Aliases */
   --color-accent-orange: var(--color-user-bubble);
-  --color-accent-orange-dark: #e68a00; /* A slightly darker shade for contrast/hover */
+  --color-accent-orange-dark: #e68a00;
 
-  /* Font family definition */
-  --font-sans: 'Inter var', sans-serif; /* Or any modern sans-serif font you prefer */
+  --font-sans: 'Inter var', sans-serif;
+}
 
-  /* Keyframes for animations, defined directly within @theme */
+@theme {
+  /* Animations */
   @keyframes fade-in-up {
     from {
       opacity: 0;
@@ -87,7 +88,7 @@ body::before {
     0%,
     100% {
       transform: scale(1);
-      box-shadow: 0 0 5px rgba(255, 152, 0, 0.4); /* Use new orange color for glow */
+      box-shadow: 0 0 5px rgba(255, 152, 0, 0.4);
     }
     50% {
       transform: scale(1.05);
@@ -120,7 +121,6 @@ body::before {
     }
   }
 
-  /* Map keyframes to animation utilities */
   --animation-fade-in-up: fade-in-up 0.5s ease-out forwards;
   --animation-pulse-glow: pulse-glow 2s infinite ease-in-out;
   --animation-dot-blink: dot-blink 1.4s infinite linear both;
