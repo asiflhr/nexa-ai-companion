@@ -33,8 +33,17 @@ export const personas = {
   }
 }
 
-export const getPersonaPrompt = (personaId, chatSummary = '') => {
-  const persona = personas[personaId] || personas.niko
+export const getPersonaPrompt = (personaId, chatSummary = '', customPersona = null) => {
+  let persona
+  
+  if (customPersona) {
+    // Use custom persona if provided
+    persona = customPersona
+  } else {
+    // Fall back to default personas
+    persona = personas[personaId] || personas.niko
+  }
+  
   let prompt = persona.systemPrompt
   
   if (chatSummary) {

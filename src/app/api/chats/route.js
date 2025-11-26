@@ -25,14 +25,14 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { title, persona } = await req.json()
+  const { title, persona, messages } = await req.json()
   
   await dbConnect()
   const chat = await Chat.create({
     userId: session.user.id,
     title: title || 'New Chat',
     persona: persona || 'niko',
-    messages: [],
+    messages: messages || [],
   })
 
   return NextResponse.json(chat)

@@ -1,4 +1,4 @@
-# AI Girlfriend App - Enhanced Setup Guide
+# Nexa AI Companion - Enhanced Setup Guide
 
 ## New Features Added
 
@@ -37,7 +37,7 @@ Copy `.env.example` to `.env` and fill in your values:
 ```env
 NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 TTS_API_KEY=your_tts_api_key_here
-MONGODB_URI=mongodb://localhost:27017/ai-girlfriend
+MONGODB_URI=mongodb://localhost:27017/nexa-ai-companion
 NEXTAUTH_SECRET=your_nextauth_secret_here
 NEXTAUTH_URL=http://localhost:3000
 ```

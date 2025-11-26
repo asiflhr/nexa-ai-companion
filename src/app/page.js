@@ -69,23 +69,11 @@ export default function Home() {
     }
   }
 
-  const createNewChat = async () => {
-    try {
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ persona: currentPersona })
-      })
-      if (response.ok) {
-        const newChat = await response.json()
-        setCurrentChatId(newChat._id)
-        setMessages([])
-        setChatSummary('')
-        loadChats()
-      }
-    } catch (error) {
-      console.error('Failed to create chat:', error)
-    }
+  const createNewChat = () => {
+    // Just reset the UI state, don't create DB entry yet
+    setCurrentChatId(null)
+    setMessages([])
+    setChatSummary('')
   }
 
   const loadChat = async (chatId) => {
@@ -103,11 +91,12 @@ export default function Home() {
     }
   }
 
-  const saveChat = async (newMessages, summary = chatSummary) => {
-    if (!currentChatId) return
+  const saveChat = async (newMessages, summary = chatSummary, chatIdToUse = null) => {
+    const targetChatId = chatIdToUse || currentChatId
+    if (!targetChatId) return
     
     try {
-      await fetch(`/api/chats/${currentChatId}`, {
+      await fetch(`/api/chats/${targetChatId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newMessages, summary })
@@ -169,8 +158,8 @@ export default function Home() {
 
   if (status === 'loading') {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-[--color-chat-bg]'>
-        <Loader2 className='animate-spin text-[--color-user-bubble]' size={32} />
+      <div className='min-h-screen flex items-center justify-center bg-chat-bg'>
+        <Loader2 className='animate-spin text-user-bubble' size={32} />
       </div>
     )
   }
@@ -183,11 +172,6 @@ export default function Home() {
 
   const sendMessage = async (messageText) => {
     if (!messageText.trim()) return
-
-    // Create new chat if none exists
-    if (!currentChatId) {
-      await createNewChat()
-    }
 
     const userMessage = {
       id: uuidv4(),
@@ -245,13 +229,55 @@ export default function Home() {
       const finalMessages = [...newMessages, aiMessage]
       setMessages(finalMessages)
       
-      // Save chat and update summary periodically
-      if (finalMessages.length % 6 === 0) {
-        const summary = await summarizeChat(finalMessages)
-        setChatSummary(summary)
-        saveChat(finalMessages, summary)
-      } else {
-        saveChat(finalMessages)
+      // Handle first message: generate title and create chat
+      let chatId = currentChatId
+      if (!chatId && finalMessages.length === 2) {
+        try {
+          // Generate title first
+          const titleResponse = await fetch('/api/generate-title', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              userMessage: messageText, 
+              aiResponse: geminiResponseText 
+            })
+          })
+          
+          let generatedTitle = 'New Chat'
+          if (titleResponse.ok) {
+            const titleData = await titleResponse.json()
+            generatedTitle = titleData.title || 'New Chat'
+          }
+          
+          // Now create chat with the generated title
+          const createResponse = await fetch('/api/chats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              persona: currentPersona,
+              title: generatedTitle,
+              messages: finalMessages
+            })
+          })
+          
+          if (createResponse.ok) {
+            const newChat = await createResponse.json()
+            chatId = newChat._id
+            setCurrentChatId(chatId)
+            loadChats()
+          }
+        } catch (error) {
+          console.error('Failed to create chat with title:', error)
+        }
+      } else if (chatId) {
+        // Save chat and update summary periodically for existing chats
+        if (finalMessages.length % 6 === 0) {
+          const summary = await summarizeChat(finalMessages)
+          setChatSummary(summary)
+          saveChat(finalMessages, summary, chatId)
+        } else {
+          saveChat(finalMessages, chatSummary, chatId)
+        }
       }
     }
   }
@@ -272,31 +298,31 @@ export default function Home() {
   }
 
   return (
-    <main className='relative flex h-screen overflow-hidden bg-[--color-chat-bg]'>
+    <main className='relative flex h-screen overflow-hidden bg-chat-bg'>
       {/* Background Gradient & Blob Animations */}
       <div className='absolute inset-0 z-0 overflow-hidden pointer-events-none'>
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className='absolute top-1/4 left-1/4 w-96 h-96 bg-accent-orange rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-[--animation-blob]'
+          className='absolute top-1/4 left-1/4 w-96 h-96 bg-user-bubble rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-[--animation-blob]'
         ></motion.div>
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className='absolute bottom-1/3 right-1/4 w-80 h-80 bg-[--color-accent-orange-dark] rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-[--animation-blob] animation-delay-2000'
+          className='absolute bottom-1/3 right-1/4 w-80 h-80 bg-accent-secondary rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-[--animation-blob] animation-delay-2000'
         ></motion.div>
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.6 }}
-          className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[--color-ai-bubble] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-[--animation-blob] animation-delay-4000'
+          className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-accent-primary rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-[--animation-blob] animation-delay-4000'
         ></motion.div>
       </div>
 
       {/* Desktop Sidebar */}
-      <div className='hidden md:flex w-80 flex-col border-r border-[--color-border-subtle] bg-[--color-chat-bg-dark] z-20'>
+      <div className='hidden md:flex w-80 flex-col border-r border-white/5 bg-chat-bg-dark/50 backdrop-blur-xl z-20'>
         <ChatHistory
           chats={chats}
           currentChatId={currentChatId}
@@ -312,7 +338,7 @@ export default function Home() {
       {/* Main Chat Interface */}
       <div className='flex-1 flex flex-col relative z-10 h-full'>
         {/* Header */}
-        <div className='flex items-center justify-between p-4 bg-[--color-ai-bubble] border-b border-[--color-border-subtle] text-ai-bubble'>
+        <div className='flex items-center justify-between p-4 bg-chat-bg-dark/80 backdrop-blur-md border-b border-white/5 text-text-primary shadow-sm z-20'>
           <button 
             onClick={() => setShowChatHistory(true)}
             className='md:hidden text-[--color-icon-light] hover:text-white transition-colors'
@@ -344,7 +370,7 @@ export default function Home() {
         {/* Chat Messages Container */}
         <div
           ref={chatContainerRef}
-          className='flex-1 flex flex-col overflow-y-auto w-full px-4 py-3 custom-scrollbar bg-[--color-chat-bg]'
+          className='flex-1 flex flex-col overflow-y-auto w-full px-4 py-3 custom-scrollbar bg-transparent'
         >
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
@@ -370,7 +396,7 @@ export default function Home() {
         </div>
 
         {/* Input Area */}
-        <div className='flex items-center p-4 bg-[--color-chat-bg-dark] border-t border-[--color-border-subtle]'>
+        <div className='flex items-center p-4 bg-chat-bg-dark/80 backdrop-blur-md border-t border-white/5 z-20'>
           <button className='text-[--color-icon-light] hover:text-white mr-3 transition-colors'>
             <Paperclip size={24} />
           </button>
@@ -381,7 +407,7 @@ export default function Home() {
               onChange={handleTextInputChange}
               onKeyDown={handleKeyPress}
               placeholder='Type a message...'
-              className='w-full bg-[--color-chat-bg] text-[--color-text-primary] placeholder-[--color-text-placeholder] rounded-full px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-[--color-user-bubble] transition-all'
+              className='w-full bg-white/5 text-text-primary placeholder-text-placeholder rounded-full px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-user-bubble/50 transition-all border border-white/10'
             />
             <button className='absolute right-3 top-1/2 -translate-y-1/2 text-[--color-icon-light] hover:text-white transition-colors'>
               <Smile size={24} />
@@ -391,7 +417,7 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSendButtonClick}
-            className='p-3 ml-3 bg-[--color-user-bubble] text-white rounded-full shadow-lg hover:shadow-orange-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed'
+            className='p-3 ml-3 bg-gradient-to-r from-user-bubble to-accent-secondary text-white rounded-full shadow-lg shadow-user-bubble/20 hover:shadow-user-bubble/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed'
             disabled={!inputMessage.trim() || isLoadingGemini}
             aria-label='Send message'
           >

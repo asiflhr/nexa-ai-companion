@@ -1,77 +1,31 @@
 @import 'tailwindcss';
 
-/* Custom scrollbar for a sleek look */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--chat-bg-dark); /* Darker track */
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--accent-orange-dark); /* User bubble color */
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-orange);
-}
-
-html,
-body {
-  @apply h-full w-full overflow-hidden;
-}
-
-body {
-  /* Use the new chat-bg and primary text color */
-  @apply bg-[--color-chat-bg] text-[--color-text-primary] font-sans;
-}
-
-/* Background Pattern (subtle dots) */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  background-image: radial-gradient(
-    circle,
-    var(--color-chat-bg-pattern) 1px,
-    transparent 2px
-  );
-  background-size: 20px 20px;
-  opacity: 0.1; /* Subtle pattern */
-}
-
-/* @theme block: All your custom Tailwind v4 configurations live here */
-:root {
-  /* Deep Dark Mode Palette */
-  --color-chat-bg: #0a0a0a;
-  --color-chat-bg-dark: #000000;
-  --color-chat-bg-pattern: #222222;
-
-  --color-user-bubble: #ff9800;
-  --color-ai-bubble: #1e1e1e;
-
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a0a0a0;
-  --color-text-placeholder: #555555;
-  --color-icon-light: #a0a0a0;
-  --color-icon-dark: #555555;
-
-  --color-border-subtle: #2a2a2a;
-
-  /* Aliases */
-  --color-accent-orange: var(--color-user-bubble);
-  --color-accent-orange-dark: #e68a00;
-
-  --font-sans: 'Inter var', sans-serif;
-}
-
 @theme {
+  /* Shiny Dark Mode Palette */
+  --color-chat-bg: #05050a; /* Deep Space Black */
+  --color-chat-bg-dark: #000000;
+  --color-chat-bg-pattern: #1a1a2e;
+
+  /* Bubbles */
+  --color-user-bubble: #7c3aed; /* Violet 600 */
+  --color-ai-bubble: #1e1e24; /* Dark Blue-Gray */
+  
+  /* Text */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #94a3b8; /* Slate 400 */
+  --color-text-placeholder: #475569; /* Slate 600 */
+  
+  /* Icons & UI */
+  --color-icon-light: #cbd5e1; /* Slate 300 */
+  --color-icon-dark: #64748b; /* Slate 500 */
+  --color-border-subtle: #2d2d3a;
+  
+  /* Accents */
+  --color-accent-primary: #06b6d4; /* Cyan */
+  --color-accent-secondary: #f472b6; /* Pink */
+  --color-accent-orange: #f59e0b; /* Amber (keeping for compatibility) */
+  --color-accent-orange-dark: #d97706;
+
   /* Animations */
   @keyframes fade-in-up {
     from {
@@ -85,44 +39,75 @@ body::before {
   }
 
   @keyframes pulse-glow {
-    0%,
-    100% {
+    0%, 100% {
       transform: scale(1);
-      box-shadow: 0 0 5px rgba(255, 152, 0, 0.4);
+      box-shadow: 0 0 5px rgba(124, 58, 237, 0.4);
     }
     50% {
       transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(255, 152, 0, 0.8);
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
     }
   }
 
   @keyframes dot-blink {
-    0%,
-    100% {
-      opacity: 0.2;
-    }
-    50% {
-      opacity: 1;
-    }
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
   }
 
   @keyframes blob {
-    0% {
-      transform: translate(0px, 0px) scale(1);
-    }
-    33% {
-      transform: translate(30px, -50px) scale(1.1);
-    }
-    66% {
-      transform: translate(-20px, 20px) scale(0.9);
-    }
-    100% {
-      transform: translate(0px, 0px) scale(1);
-    }
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
   }
 
   --animation-fade-in-up: fade-in-up 0.5s ease-out forwards;
   --animation-pulse-glow: pulse-glow 2s infinite ease-in-out;
   --animation-dot-blink: dot-blink 1.4s infinite linear both;
   --animation-blob: blob 7s infinite ease-in-out;
+}
+
+/* Custom Utilities */
+.glass-panel {
+  @apply bg-white/5 backdrop-blur-lg border border-white/10;
+}
+
+.shiny-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-chat-bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-subtle);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-icon-dark);
+}
+
+/* Base Styles */
+html, body {
+  @apply h-full w-full overflow-hidden bg-chat-bg text-text-primary font-sans;
+}
+
+/* Background Pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+    radial-gradient(var(--color-chat-bg-pattern) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px;
+  opacity: 0.4;
 }

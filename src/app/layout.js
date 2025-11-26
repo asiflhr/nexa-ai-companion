@@ -3,7 +3,7 @@ import './globals.css'
 import Providers from './components/Providers'
 
 export const metadata = {
-  title: 'AI Girlfriend 💖',
+  title: 'Nexa AI Companion',
   description: 'Your next-gen AI companion.',
 }
 

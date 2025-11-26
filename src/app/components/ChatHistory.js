@@ -54,7 +54,7 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
   }
 
   const Content = () => (
-    <div className={`flex flex-col h-full ${isSidebar ? 'w-full' : 'bg-[--color-chat-bg-dark] rounded-2xl p-6 w-full max-w-md max-h-[80vh]'}`} onClick={(e) => e.stopPropagation()}>
+    <div className={`flex flex-col h-full ${isSidebar ? 'w-full' : 'bg-chat-bg-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-full max-w-md max-h-[80vh]'}`} onClick={(e) => e.stopPropagation()}>
       <div className='flex items-center justify-between mb-6 p-4 pb-0'>
         <h2 className='text-2xl font-bold text-white tracking-tight'>
           Chats
@@ -62,7 +62,7 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
         {!isSidebar && (
           <button
             onClick={onClose}
-            className='text-[--color-text-secondary] hover:text-[--color-text-primary]'
+            className='text-text-secondary hover:text-text-primary'
           >
             <X size={24} />
           </button>
@@ -75,7 +75,7 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
             onNewChat()
             if (!isSidebar) onClose()
           }}
-          className='w-full p-3.5 bg-[--color-user-bubble] text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:scale-[1.02] transition-all duration-200 flex items-center justify-center space-x-2'
+          className='w-full p-3.5 bg-gradient-to-r from-user-bubble to-accent-secondary text-white rounded-xl font-bold shadow-lg shadow-user-bubble/20 hover:shadow-user-bubble/30 hover:scale-[1.02] transition-all duration-200 flex items-center justify-center space-x-2'
         >
           <Plus size={20} />
           <span>New Chat</span>
@@ -84,7 +84,7 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
 
       <div className='flex-1 overflow-y-auto space-y-3 custom-scrollbar px-4 pb-4'>
         {chats.length === 0 ? (
-          <div className='flex flex-col items-center justify-center h-40 text-[--color-text-secondary]'>
+          <div className='flex flex-col items-center justify-center h-40 text-text-secondary'>
             <MessageCircle size={40} className='mb-3 opacity-20' />
             <p>No chats yet</p>
           </div>
@@ -102,20 +102,20 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
                 }}
                 className={`w-full p-3 rounded-xl border transition-all duration-300 relative group cursor-pointer ${
                   isActive
-                    ? 'border-[--color-user-bubble] bg-gradient-to-r from-[--color-user-bubble]/90 to-orange-600/90 shadow-lg shadow-orange-500/20'
-                    : 'border-transparent bg-[--color-ai-bubble] hover:bg-[--color-chat-bg] hover:border-[--color-border-subtle]'
-                }`}
+                    ? 'border-user-bubble bg-gradient-to-r from-user-bubble/90 to-accent-secondary/90 shadow-lg shadow-user-bubble/20'
+                    : 'border-transparent bg-white/5 hover:bg-white/10 hover:border-white/10'
+                } ${activeMenuId === chat._id ? 'z-50' : 'z-0'}`}
               >
                 <div className='flex items-center space-x-3 relative z-10'>
                   {/* Avatar */}
                   <div className='relative flex-shrink-0'>
                     <div className={`text-2xl p-2 rounded-full transition-colors duration-300 ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-[--color-chat-bg-dark] text-white'
+                      isActive ? 'bg-white/20 text-white' : 'bg-chat-bg-dark text-white'
                     }`}>
                       {personas[chat.persona]?.avatar || '💖'}
                     </div>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${
-                      isActive ? 'border-orange-500' : 'border-[--color-ai-bubble]'
+                      isActive ? 'border-accent-secondary' : 'border-chat-bg-dark'
                     }`} style={{ backgroundColor: personas[chat.persona]?.color || '#10b981' }} />
                   </div>
                   
@@ -131,12 +131,12 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
                             if (e.key === 'Enter') handleRenameSubmit(e)
                             if (e.key === 'Escape') setEditingChatId(null)
                           }}
-                          className='bg-[--color-chat-bg-dark] text-white text-sm rounded px-2 py-1 w-full outline-none border border-[--color-user-bubble] min-w-0'
+                          className='bg-chat-bg-dark text-white text-sm rounded px-2 py-1 w-full outline-none border border-user-bubble min-w-0'
                           autoFocus
                         />
                         <button
                           onClick={handleRenameSubmit}
-                          className='p-1 bg-[--color-user-bubble] rounded text-white hover:bg-orange-600 flex-shrink-0'
+                          className='p-1 bg-user-bubble rounded text-white hover:bg-accent-secondary flex-shrink-0'
                         >
                           <Check size={14} />
                         </button>
@@ -154,19 +154,19 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
                       <>
                         <div className='flex justify-between items-start'>
                           <h3 className={`font-bold text-sm truncate pr-2 ${
-                            isActive ? 'text-white' : 'text-white group-hover:text-[--color-user-bubble] transition-colors'
+                            isActive ? 'text-white' : 'text-white group-hover:text-user-bubble transition-colors'
                           }`}>
                             {chat.title}
                           </h3>
                           {/* Date - Hidden on hover to make room for menu if needed, but menu is absolute so maybe not */}
                           <span className={`text-[10px] flex-shrink-0 ${
-                            isActive ? 'text-orange-100' : 'text-gray-500'
+                            isActive ? 'text-white/80' : 'text-gray-500'
                           }`}>
                             {new Date(chat.lastActivity).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </span>
                         </div>
                         <p className={`text-xs mt-0.5 truncate ${
-                          isActive ? 'text-orange-100/80' : 'text-gray-400'
+                          isActive ? 'text-white/70' : 'text-gray-400'
                         }`}>
                           {personas[chat.persona]?.name || 'Unknown'}
                         </p>
@@ -182,7 +182,7 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
                         className={`p-1.5 rounded-full transition-all duration-200 ${
                           isActive 
                             ? 'text-white/80 hover:bg-white/20' 
-                            : 'text-gray-400 hover:text-white hover:bg-[--color-user-bubble] opacity-0 group-hover:opacity-100'
+                            : 'text-gray-400 hover:text-white hover:bg-user-bubble opacity-0 group-hover:opacity-100'
                         } ${activeMenuId === chat._id ? 'opacity-100 bg-white/10' : ''}`}
                       >
                         <MoreVertical size={16} />
@@ -195,13 +195,13 @@ const ChatHistory = ({ chats, currentChatId, onChatSelect, onNewChat, onClose, i
                             initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                            className='absolute right-0 top-8 w-32 bg-[#1a1a1a] border border-[--color-border-subtle] rounded-lg shadow-xl z-50 overflow-hidden'
+                            className='absolute right-0 top-8 w-32 bg-chat-bg-dark border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden'
                             ref={menuRef}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
                               onClick={(e) => handleRenameClick(chat, e)}
-                              className='w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-[--color-user-bubble] hover:text-white flex items-center gap-2 transition-colors'
+                              className='w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-user-bubble hover:text-white flex items-center gap-2 transition-colors'
                             >
                               <Edit2 size={14} />
                               Rename

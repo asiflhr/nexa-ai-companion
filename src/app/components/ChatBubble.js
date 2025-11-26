@@ -7,8 +7,8 @@ import remarkGfm from 'remark-gfm' // Import remarkGfm for GitHub Flavored Markd
 const ChatBubble = ({ message, type, timestamp }) => {
   const isUser = type === 'user'
   const bubbleClasses = isUser
-    ? 'bg-user-bubble text-text-primary self-end rounded-t-xl rounded-l-xl rounded-br-md float-end'
-    : 'bg-ai-bubble text-text-primary self-start rounded-t-xl rounded-r-xl rounded-bl-md float-start'
+    ? 'bg-gradient-to-br from-user-bubble to-accent-secondary text-white shadow-lg shadow-user-bubble/20 self-end rounded-t-2xl rounded-bl-2xl rounded-br-sm float-end'
+    : 'bg-ai-bubble/80 backdrop-blur-sm border border-white/5 text-text-primary self-start rounded-t-2xl rounded-br-2xl rounded-bl-sm float-start shadow-md'
 
   // Define custom rendering for Markdown elements
   const markdownComponents = {

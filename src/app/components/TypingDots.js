@@ -13,14 +13,14 @@ const TypingDot = ({ delay }) => (
       repeatType: 'loop',
     }}
     // Use the user bubble color for typing dots
-    className='inline-block w-2 h-2 mx-[1px] bg-user-bubble rounded-full'
+    className='inline-block w-2 h-2 mx-[1px] bg-accent-primary rounded-full'
   />
 )
 
 const TypingDots = () => {
   return (
     // Use AI bubble color for the typing bubble background
-    <div className='flex items-center float-end w-fit space-x-[2px] p-3 bg-ai-bubble rounded-xl shadow-lg my-2 self-start'>
+    <div className='flex items-center w-fit space-x-[2px] p-3 bg-ai-bubble/80 backdrop-blur-sm border border-white/5 rounded-t-2xl rounded-br-2xl rounded-bl-sm shadow-md my-2 self-start'>
       <TypingDot delay={0} />
       <TypingDot delay={0.2} />
       <TypingDot delay={0.4} />
